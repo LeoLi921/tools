@@ -31,7 +31,7 @@ def db_create_class(database, table, path):
     class_do_name = class_name + "DO"
     class_list = []
     # 根据业务自己定义自己的包名
-    class_list.append('package package tech.peche.%s.model;\r\n\r\n' % path)
+    class_list.append('package tech.peche.%s.model;\r\n\r\n' % path)
     class_list.append('import java.util.Date;\r\n\r\n')
     class_list.append('public class %s {\r\n' % class_do_name)
     class_list = class_list + create_class_body(result)
@@ -44,7 +44,7 @@ def db_create_class(database, table, path):
 
     class_mapper_name = class_name + "Mapper"
     class_list.clear()
-    class_list.append('package package tech.peche.%s.mapper;\r\n\r\n' % path)
+    class_list.append('package tech.peche.%s.mapper;\r\n\r\n' % path)
     class_list.append('import tech.peche.%s.model.%s;\r\n' % (path, class_do_name))
     class_list.append('import java.util.List;\r\n\r\n')
     class_list.append('public interface %s {\r\n\r\n' % class_mapper_name)
@@ -109,17 +109,25 @@ def create_xml_body(result, mapper_path, do_path, table):
     class_body.append('%4s</resultMap>\r\n\r\n' % ' ')
 
     class_body.append('%4s<sql id="insert_columns">\r\n' % ' ')
-    for v in result:
+    for index, v in enumerate(result):
         sql_name = v['COLUMN_NAME']
         java_name = lower_first(field_name(sql_name))
-        class_body.append('%8s<if test="%s != null">#{%s}</if>\r\n' % (' ', java_name, java_name))
+        if sql_name != 'id':
+            if index == 1:
+                class_body.append('%8s<if test="%s != null">%s</if>\r\n' % (' ', java_name, sql_name))
+            else:
+                class_body.append('%8s<if test="%s != null">,%s</if>\r\n' % (' ', java_name, sql_name))
     class_body.append('%4s</sql>\r\n\r\n' % ' ')
 
     class_body.append('%4s<sql id="insert_values">\r\n' % ' ')
-    for v in result:
+    for index, v in enumerate(result):
         sql_name = v['COLUMN_NAME']
         java_name = lower_first(field_name(sql_name))
-        class_body.append('%8s<if test="%s != null">#{%s}</if>\r\n' % (' ', java_name, java_name))
+        if sql_name != 'id':
+            if index == 1:
+                class_body.append('%8s<if test="%s != null">#{%s}</if>\r\n' % (' ', java_name, java_name))
+            else:
+                class_body.append('%8s<if test="%s != null">,#{%s}</if>\r\n' % (' ', java_name, java_name))
     class_body.append('%4s</sql>\r\n\r\n' % ' ')
 
     class_body.append('%4s<insert id="insert" parameterType="%s" useGeneratedKeys="true" keyProperty="id">\r\n' % (' ', do_path))
@@ -138,7 +146,7 @@ def create_xml_body(result, mapper_path, do_path, table):
         sql_name = v['COLUMN_NAME']
         java_name = lower_first(field_name(sql_name))
         if field_type(v['DATA_TYPE']) == "String":
-            class_body.append('%12s<if test="%s != null and %s != ''"> and %s=#{%s} </if>\r\n' % (' ', java_name, java_name, sql_name, java_name))
+            class_body.append('%12s<if test="%s != null and %s != \'\'"> and %s=#{%s} </if>\r\n' % (' ', java_name, java_name, sql_name, java_name))
         else:
             class_body.append('%12s<if test="%s != null"> and %s=#{%s} </if>\r\n' % (' ', java_name, sql_name, java_name))
     class_body.append('%8s</where>\r\n' % ' ')
@@ -182,5 +190,5 @@ def lower_first(str):
 
 
 if __name__ == "__main__":
-    db_create_class('history_trace', 'es_struct', 'trace')
+    db_create_class('history_trace', 'org_es_table', 'trace')
 
